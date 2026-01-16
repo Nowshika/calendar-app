@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Calendar App</title>
+    <link href="https://fonts.googleapis.com/css2?family=Babylonica&family=Bagel+Fat+One&family=Baloo+2:wght@700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --bg-page: #F6DEC4;
+            --text-brown: #663123;
+            --box-color: #F7C687;
+            --accent-light: #FFDA8C;
+            --accent-dark: #F9B25D;
+        }
+
+        body {
+            background: #e0e0e0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            overflow: hidden;
+            font-family: 'Baloo 2', cursive;
+        }
+
+        .app-container {
+            width: 700px;
+            height: 700px;
+            background-color: var(--bg-page);
+            border-radius: 80px; 
+            box-shadow: 0 50px 100px rgba(0,0,0,0.2);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .header {
+            position: absolute;
+            top: 50px;
+            left: 50px;
+        }
+
+        .month-name {
+            font-family: 'Babylonica', cursive;
+            font-size: 80px;
+            color: black;
+            margin: 0;
+            line-height: 0.7;
+        }
+
+        .year-label {
+            font-family: 'Bagel Fat One', cursive;
+            font-size: 45px;
+            color: black;
+            margin-top: 10px;
+        }
+
+        .nav-buttons {
+            position: absolute;
+            top: 50px;
+            right: 50px;
+            display: flex;
+            gap: 12px;
+            z-index: 50;
+        }
+
+        .nav-btn {
+            width: 42px;
+            height: 42px;
+            border-radius: 50%;
+            background: var(--box-color);
+            border: none;
+            font-family: 'Bagel Fat One', cursive;
+            font-size: 18px;
+            color: var(--text-brown);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            transition: all 0.2s ease-in-out;
+        }
+
+        .nav-btn:hover {
+            background-color: white !important;
+            transform: scale(1.15);
+        }
+
+        .calendar-wrapper {
+            position: absolute;
+            top: 150px; 
+            right: 50px;
+            width: 310px;
+            z-index: 5;
+        }
+
+        .days-row, .dates-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 8px;
+        }
+
+        .cell {
+            background-color: var(--box-color);
+            color: var(--text-brown);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 40px;
+            font-size: 20px;
+            font-weight: 700;
+        }
+
+        .day-cell {
+            font-family: 'Bagel Fat One';
+            font-size: 18px;
+            margin-bottom: 4px;
+        }
+
+        .highlight { 
+            background-color: white !important; 
+        }
+
+        /* CHARACTER MOVED HIGHER */
+        .mouse-container {
+            position: absolute;
+            bottom: 160px; /* Increased from 110px to move it up more */
+            left: 45px;   
+            width: 290px;
+            z-index: 30; 
+            pointer-events: none;
+        }
+
+        .mouse-img {
+            width: 100%;
+            filter: drop-shadow(0 15px 15px rgba(0,0,0,0.1));
+        }
+
+        .bottom-area {
+            position: absolute;
+            bottom: 0;
+            width: 100%;
+            height: 285px;
+            background: linear-gradient(135deg, var(--accent-light), var(--accent-dark));
+            clip-path: path('M0,180 C150,350 350,-50 700,100 L700,285 L0,285 Z');
+            z-index: 10;
+        }
+
+        .clock-container {
+            position: absolute;
+            bottom: 40px;
+            right: 60px;
+            display: flex;
+            align-items: baseline;
+            color: var(--text-brown);
+            font-family: 'Bagel Fat One', cursive;
+            z-index: 20;
+        }
+
+        .time-digits {
+            font-size: 110px;
+            margin: 0;
+            line-height: 1;
+        }
+
+        .ampm-label {
+            font-size: 35px;
+            margin-left: 10px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="app-container">
+    <div class="nav-buttons">
+        <button class="nav-btn" id="prevBtn">←</button>
+        <button class="nav-btn" id="nextBtn">→</button>
+    </div>
+
+    <div class="header">
+        <h1 class="month-name" id="monthTxt">January</h1>
+        <div class="year-label" id="yearTxt">2026</div>
+    </div>
+
+    <div class="calendar-wrapper">
+        <div class="days-row" id="daysRow">
+            <div class="cell day-cell">S</div><div class="cell day-cell">M</div>
+            <div class="cell day-cell">T</div><div class="cell day-cell">W</div>
+            <div class="cell day-cell">T</div><div class="cell day-cell">F</div>
+            <div class="cell day-cell">S</div>
+        </div>
+        <div id="datesGrid" class="dates-grid"></div>
+    </div>
+
+    <div class="mouse-container">
+        <img src="image_1.png" id="mouseImg" class="mouse-img">
+    </div>
+
+    <div class="bottom-area"></div>
+
+    <div class="clock-container">
+        <div class="time-digits" id="clock">12:00</div>
+        <div class="ampm-label" id="ampm">pm</div>
+    </div>
+</div>
+
+<script>
+    let offset = 0;
+    const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+
+    function updateCalendar() {
+        const d = new Date();
+        d.setMonth(d.getMonth() + offset);
+        const realNow = new Date();
+
+        document.getElementById('monthTxt').innerText = months[d.getMonth()];
+        document.getElementById('yearTxt').innerText = d.getFullYear();
+        document.getElementById('mouseImg').src = `image_${d.getMonth() + 1}.png`;
+
+        const dayHeaders = document.getElementById('daysRow').children;
+        for(let i=0; i<7; i++) {
+            dayHeaders[i].classList.remove('highlight');
+            if(offset === 0 && i === realNow.getDay()) {
+                dayHeaders[i].classList.add('highlight');
+            }
+        }
+
+        const grid = document.getElementById('datesGrid');
+        grid.innerHTML = '';
+        
+        const firstDay = new Date(d.getFullYear(), d.getMonth(), 1).getDay();
+        const daysInMonth = new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate();
+
+        for (let i = 0; i < firstDay; i++) grid.innerHTML += '<div></div>';
+        
+        for (let day = 1; day <= daysInMonth; day++) {
+            const isToday = (offset === 0 && day === realNow.getDate() && d.getMonth() === realNow.getMonth());
+            grid.innerHTML += `<div class="cell ${isToday ? 'highlight' : ''}">${day}</div>`;
+        }
+    }
+
+    function updateTime() {
+        const now = new Date();
+        let h = now.getHours();
+        const m = String(now.getMinutes()).padStart(2, '0');
+        const p = h >= 12 ? 'pm' : 'am';
+        h = h % 12 || 12;
+        document.getElementById('clock').innerText = `${h}:${m}`;
+        document.getElementById('ampm').innerText = p;
+    }
+
+    document.getElementById('prevBtn').onclick = () => { offset--; updateCalendar(); };
+    document.getElementById('nextBtn').onclick = () => { offset++; updateCalendar(); };
+
+    updateCalendar();
+    updateTime();
+    setInterval(updateTime, 1000);
+</script>
+
+</body>
+</html>
